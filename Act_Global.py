@@ -50,20 +50,23 @@ def index_global(param, ID, list=[]):
     if len(list) != 0:
         logging.warning(f'Внимание! Неправильно передана команда запуска кода\n'
                         'При чтений базы данных кросе номера таблицы и ID писать ничего не надо')
-    try:
-        if param == '1':
-            info = Info_User.query.get(ID)
-            return info.id, info.user_name, info.password, info.email, info.count, info.icon
-            # info = Info_User.query.all()
-        elif param == '2':
-            info = Story_win_global.query.get(ID)
-            return info.id, info.id_user, info.count, info.icon, info.date_time_win
-        elif param == '3':
-            info = User_loser.query.get(ID)
-            return info.place, info.id_user, info.count, info.icon
+    if param == '1':
+        info = Info_User.query.get(ID)
+        return info.id, info.user_name, info.password, info.email, info.count, info.icon
+        # info = Info_User.query.all()
+    elif param == '2':
+        info = Story_win_global.query.get(ID)
+        return info.id, info.id_user, info.count, info.icon, info.date_time_win
+    elif param == '3':
+        info = User_loser.query.get(ID)
+        return info.place, info.id_user, info.count, info.icon
+    elif param == '4':
+        for i in Info_User.query.all():
+            print(i.user_name)
+            if i.user_name == ID:
+                return False
+        return True
 
-    except:
-        print("Ошибка чтения из БД")
 
 
 def new_write(param, list):
@@ -97,10 +100,13 @@ def new_write(param, list):
 
 
 if __name__ == "__main__":
-    act = sys.argv[1]
-    if act == '1':
-        index_global(sys.argv[2], sys.argv[3], sys.argv[4:])
-    elif act == '2':
-        new_write(sys.argv[2], sys.argv[3:])
-    else:
-        logging.error(f'Error 12 not True argument act = {act}!!!')
+    try:
+        act = sys.argv[1]
+        if act == '1':
+            index_global(sys.argv[2], sys.argv[3], sys.argv[4:])
+        elif act == '2':
+            new_write(sys.argv[2], sys.argv[3:])
+        else:
+            logging.error(f'Error 12 not True argument act = {act}!!!')
+    except:
+        pass
