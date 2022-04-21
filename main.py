@@ -1,10 +1,10 @@
 import datetime
 import logging
 import os
-import sys
+from random import randint
 
 from flask import Flask, request, render_template, url_for, redirect
-from flask_login import LoginManager, UserMixin, login_user, login_required, current_user
+from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
 
 # папка для сохранения загруженных файлов
@@ -131,13 +131,30 @@ def new_write(param, list):
             try:
                 db.session.delete(b)
                 db.session.flush()
-                db.session.commit()
             except:
+                db.session.rollback()
                 logging.error('Удаление пошло не поплану'
                               f'параметры:{param}{list}')
-            u = Info_User(id=list[1], user_name=list[2],
-                          password=list[3], email=list[4],
-                          count=list[5], icon=list[6])
+            u = Info_User(id=list[0], user_name=list[1],
+                          password=list[2], email=list[3],
+                          count=list[4], icon=list[5])
+        elif param == 5:
+            a = Info_User.query.get(list[0])
+            d = a.count
+            d += list[1]
+            c = index_global('1', list[0])
+            b = index_global(8, list[0])
+            try:
+                db.session.delete(b)
+                db.session.flush()
+            except:
+                db.session.rollback()
+                logging.error('Удаление пошло не поплану'
+                              f'параметры:{param}{list}')
+            u = Info_User(id=c[0], user_name=c[1],
+                          password=c[2], email=c[3],
+                          count=int(d), icon=c[5])
+
         else:
             raise FloatingPointError
         db.session.add(u)
@@ -146,9 +163,10 @@ def new_write(param, list):
     except FloatingPointError:
         logging.error(f'Error 12 not True argument param = {param}!!!')
         print('Типо ошибка, хихи')
-    except:
+    except Exception as e:
         logging.error(f'Error 11 Ошибка При добавлений данных в базу данных\n'
-                      f'Параметры {param, list}')
+                      f'Параметры {param, list}'
+                      f'{e}')
         db.session.rollback()
         print("Ошибка добавления в БД")
 
@@ -158,23 +176,33 @@ def load_user(user_id):
     return Info_User.query.get(user_id)
 
 
-if __name__ == "__main__":
-    try:
-        act = sys.argv[1]
-        if act == '1':
-            index_global(sys.argv[2], sys.argv[3], sys.argv[4:])
-        elif act == '2':
-            new_write(sys.argv[2], sys.argv[3:])
+@app.route('/game', methods=["POST", "GET"])
+@login_required
+def game():
+    d = current_user
+    last_chanc = randint(1, 10)
+    dictt = {'info1': '', 'info2': '', 'info3': '', 'info4': '', 'info5': '', 'error_main': '0'}
+    if request.method == "POST":
+        a = [randint(1, 100), randint(1, 100), randint(1, 100), randint(1, 100), randint(1, 100)]
+        dictt = {'info1': a[0], 'info2': a[1], 'info3': a[2], 'info4': a[3], 'info5': a[4]}
+        if d.count <= 0 and last_chanc == 1:
+            dictt['error_main'] = '1'
+            dictt['error_info'] = 'Ты слил все деньги, но бомж дал тебе 200 рублей, так что можешь жить дальше'
+            count = 200
+        elif d.count <= 0:
+            dictt['error_main'] = '1'
+            dictt['error_info'] = 'Ты слил все деньги, теперь ты живешь на улице'
+            count = 0
+        elif a[2] > 60:
+            dictt['error_main'] = '1'
+            dictt['error_info'] = 'О повезло повезло, твоя награда: сотка'
+            count = 100
         else:
-            logging.error(f'Error 12 not True argument act = {act}!!!')
-    except:
-        pass
-
-
-# end
-@app.route('/')
-def a():
-    return 'b'
+            dictt['error_main'] = '1'
+            dictt['error_info'] = 'ХАХАХАХАХ, тебе не обыграть бога рандома, с тебя сотка'
+            count = -100
+        new_write(5, [d.id, count])
+    return render_template("game.html", **dictt)
 
 
 @app.route('/login', methods=["POST", "GET"])
@@ -197,7 +225,7 @@ def login():
             if index_global(7, name) == password:
                 user_login = UserLogin().create(name)
                 login_user(user_login)
-                return redirect(url_for('rename'))
+                return redirect(url_for('cab'))
             else:
                 dictt['error_class2'] = "is-invalid"
                 dictt['error_main'] = '1'
@@ -213,17 +241,14 @@ def login():
     return render_template("login.html", **dictt)
 
 
-@app.route('/rename')
+@app.route('/rename', methods=["POST", "GET"])
 @login_required
 def rename():
     a = current_user
-    dictt = {"name": a.user_name, "email": "", "password": a.password, "password2": "", 'error_main': '0'}
+    dictt = {"name": a.user_name, "email": "", "password": a.password, "password2": "", 'error_main': '0',
+             "success": '0'}
     icon_true = True
-    print(request.method == "POST")
-    print(16)
-
     if request.method == "POST":
-        print(1212121)
         name = request.form['name']
         password = request.form['password']
         password1 = request.form['passwordone']
@@ -250,7 +275,7 @@ def rename():
             dictt['error_class1'] = "is-invalid"
             dictt['error_main'] = '1'
             dictt['error_info'] = 'Неа'
-        elif index_global('4', name):
+        elif index_global('4', name) and name != a.user_name:
             dictt['error_class1'] = "is-invalid"
             dictt['error_main'] = '1'
             dictt['error_info'] = 'Тебе лутше выбрать СВОЕ имя'
@@ -270,7 +295,7 @@ def rename():
             dictt['error_class4'] = "is-invalid"
             dictt['error_main'] = '1'
             dictt['error_info'] = 'Почту нужно ввести чтобы мы удостоверили что это Вы'
-        elif index_global(5, email1):
+        elif not index_global(5, email1):
             dictt['error_class4'] = "is-invalid"
             dictt['error_main'] = '1'
             dictt['error_info'] = 'Про эту почту мы впервые видим'
@@ -280,9 +305,8 @@ def rename():
             dictt['error_info'] = 'Это не твоя почта'
         elif icon_true:
             new_write(4, [a.id, name, password, a.email, a.count, a.icon])
-            dictt['error_class4'] = "is-invalid"
-            dictt['error_main'] = '1'
-            dictt['error_info'] = 'все ок'
+            dictt['success'] = '1'
+            dictt['error_info'] = 'Все успешно поменяно'
     print(12121212)
     return render_template("rename.html", **dictt)
 
@@ -389,12 +413,34 @@ def registred():
             with open('db/ID.txt', 'w', encoding='utf-8') as ID:
                 ID.write(str(id1 + 1))
             new_write('1', [id1, name, password, email1, 500, 'no'])
+            return redirect(url_for('login'))
     return render_template("registred.html", **dictt)
     # with open(, 'r', encoding="utf-8") as html_stream:
     # html = html_stream.read()
 
     # for replace in dictt:
     # html = html.replace(f'{{{{ {replace} }}}}', dictt[replace])
+
+
+@app.route('/cab', methods=["POST", "GET"])
+@login_required
+def cab():
+    a = current_user
+    dictt = {"name": a.user_name, "count": a.count}
+    return render_template("cab.html", **dictt)
+
+
+@app.route('/exit', methods=["POST", "GET"])
+@login_required
+def exit():
+    dicct = {}
+    logout_user()
+    return render_template("exit.html", **dicct)
+
+
+@app.route('/', methods=["POST", "GET"])
+def main():
+    return render_template("Main.html")
 
 
 if __name__ == '__main__':

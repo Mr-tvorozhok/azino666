@@ -5,5 +5,4 @@ requests~=2.27.1
 WTForms~=3.0.1
 flask-login
 flask_sqlalchemy
-form
 Flask-WTF
