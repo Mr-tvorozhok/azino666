@@ -8,7 +8,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, cur
 from flask_sqlalchemy import SQLAlchemy
 
 # папка для сохранения загруженных файлов
-UPLOAD_FOLDER = 'icons'
+
 # расширения файлов, которые разрешено загружать
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app = Flask(__name__)
@@ -26,7 +26,7 @@ login_manager.login_view = 'login'
 
 
 def allowed_file(filename):
-    """ Функция проверки расширения файла """
+    """ Функция проверки расширения а """
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS, \
            filename.rsplit('.', 1)[1].lower()
