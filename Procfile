@@ -1,1 +1,1 @@
-$ heroku git:remote -a azino666
+web: python main.py
