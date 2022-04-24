@@ -1,8 +1,8 @@
-SQLAlchemy~=1.4.31
-Flask~=2.0.3
-Werkzeug~=2.0.3
-requests~=2.27.1
-WTForms~=3.0.1
+SQLAlchemy
+Flask
+Werkzeug
+requests
+WTForms
 flask-login
 flask_sqlalchemy
 Flask-WTF
